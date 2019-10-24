@@ -1,5 +1,5 @@
 class Onehot(object):
-    """Class for encoding onehot vectors for amino acid sequences
+    """Class for encoding two dimensional onehot feature vectors for amino acid sequences
         Must be initialized by passing in the 'alphabet' (list of unique characters) to be used for the encoding.
         Example usage below:
 
