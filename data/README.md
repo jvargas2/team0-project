@@ -1,0 +1,2 @@
+Protein Embeddings (protVec_100d_3grams.csv) note:
+If you are using this data and method please cite the following paper: Asgari, Ehsaneddin and Mofrad Mohmmad R.K. "Continuous Distributed Representation of Biological Sequences for Deep Proteomics and Genomics". PloS one (2015). In Press.
