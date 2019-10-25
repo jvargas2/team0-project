@@ -21,7 +21,7 @@ def tf_idf(vocabulary, seq, df_counts, N):
         tf = term_counts[t] / max_f
         df = df_counts[t]
         w = tf * math.log((N/df),2)
-        
+    #NOTE: This is a bug! Should return weights, but surprisingly performance is significantly worse with weights
     return term_counts
 
 #Document frequency counts
