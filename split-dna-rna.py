@@ -25,6 +25,8 @@ with open('./data/training_dna.csv', 'w') as dna_file:
         csv_writer.writerow([sequence, 1])
     for sequence in nonDRNA_sequences:
         csv_writer.writerow([sequence, 0])
+    for sequence in rna_sequences:
+        csv_writer.writerow([sequence, 0])
 
 with open('./data/training_rna.csv', 'w') as rna_file:
     csv_writer = csv.writer(rna_file)
@@ -32,4 +34,6 @@ with open('./data/training_rna.csv', 'w') as rna_file:
     for sequence in rna_sequences:
         csv_writer.writerow([sequence, 1])
     for sequence in nonDRNA_sequences:
+        csv_writer.writerow([sequence, 0])
+    for sequence in dna_sequences:
         csv_writer.writerow([sequence, 0])
