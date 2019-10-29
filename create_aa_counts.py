@@ -1,16 +1,22 @@
 import pandas
 import csv
 
-AMINO_ACIDS = ['G', 'P', 'A', 'V', 'L', 'I', 'M', 'C', 'F','Y', 'W', 'H', 'K', 'R', 'Q', 'N', 'E', 'D', 'S', 'T']
+AMINO_ACIDS = ['G', 'P', 'A', 'V', 'L', 'I', 'M', 'C', 'F',
+               'Y', 'W', 'H', 'K', 'R', 'Q', 'N', 'E', 'D', 'S', 'T']
+
 
 def get_aa_counts(sequence):
+    total_acids = len(sequence)
     counts = {}
     for letter in sequence:
         if letter in counts.keys():
             counts[letter] += 1
         else:
             counts[letter] = 1
+    for key in counts.keys():
+        counts[key] = counts[key] / total_acids
     return counts
+
 
 def print_count_data(data, filename):
     with open(filename, 'w') as output:
@@ -26,6 +32,7 @@ def print_count_data(data, filename):
                     output_array.append(0)
             output_array.append(row['Class'])
             csv_writer.writerow(output_array)
+
 
 def main():
     dna_data = pandas.read_csv("./data/training_dna.csv")
