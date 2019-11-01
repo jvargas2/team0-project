@@ -12,8 +12,8 @@ def create_model(data):
 
 
 def main():
-    dna_data = pandas.read_csv("./data/polarities_dna.csv")
-    rna_data = pandas.read_csv("./data/polarities_rna.csv")
+    dna_data = pandas.read_csv("./data/hydrophobicity_dna.csv")
+    rna_data = pandas.read_csv("./data/hydrophobicity_rna.csv")
     create_model(dna_data)
     create_model(rna_data)
 
