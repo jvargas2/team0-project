@@ -35,10 +35,10 @@ def evaluate(df):
         sensitivity = 100 * tp / (tp + fn)
         specificity = 100 * tn / (tn + fp)
 
-        denominator = sqrt((tp + fn) * (tp + fn) * (tn + fp) * (tn + fn))
+        denominator = sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
         if denominator == 0:
             denominator = 1
-        mcc = (tp * fn - fp * fn) / denominator
+        mcc = (tp * tn - fp * fn) / denominator
         
         label_results[label] = {
             'tp': tp,
