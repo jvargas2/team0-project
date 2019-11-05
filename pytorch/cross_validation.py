@@ -3,6 +3,7 @@ from math import sqrt
 
 import torch
 from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import EarlyStopping
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import multilabel_confusion_matrix
 
@@ -18,8 +19,16 @@ def main():
 
     dataset = ProteinsDataset(debug=args.debug)
     n_splits = 2 if args.debug else 5
-    max_epochs = 1 if args.debug else 20
+    max_epochs = 1 if args.debug else 30
     gpus = None if args.gpu is None else [args.gpu]
+
+    early_stop_callback = EarlyStopping(
+        monitor='val_loss',
+        min_delta=0.001,
+        patience=3,
+        verbose=True,
+        mode='min'
+    )
 
     skf = StratifiedKFold(n_splits=n_splits)
     y_true = []
@@ -27,7 +36,7 @@ def main():
 
     for train_indices, test_indices in skf.split(dataset.x, dataset.y):
         model = CharacterBiLSTM(dataset, train_indices, test_indices)
-        trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus)
+        trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus, early_stop_callback=early_stop_callback)
         trainer.fit(model)
 
         for i in test_indices:
