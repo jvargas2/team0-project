@@ -7,19 +7,20 @@ class Tfidf(object):
 
         from tfidf import Tfidf
         import preprocessing
+        alphabet = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
         df = preprocessing.load_df()
-        tfidf_feature_generator = Tfidf(list(df.protein))
+        tfidf_feature_generator = Tfidf(list(df.protein), alphabet)
         tfidf_feature_generator.encode_sequence('AFD')
+        tfidf_feature_generator.write_to_csv(df)
     """
 
-    def __init__(self, sequences):
+    def __init__(self, sequences, vocabulary):
         """Constructor: Initialize objects to be used with each encoding"""
         # Number of sequences in the corpus
         self.N = len(sequences)
 
         # Unique characters (amino acids) in the corpus
-        self.vocabulary = list(set(''.join(sequences)))
-        self.vocabulary.sort()
+        self.vocabulary = vocabulary
 
         # Dictionary of document frequency (DF) counts for each term in the vocabulary
         self.df_counts = self.initialize(sequences)
@@ -54,3 +55,23 @@ class Tfidf(object):
             weights.append(w)
 
         return weights
+
+    def write_to_csv(self, df, features_only = True):
+        """Write TF-IDF features to CSV"""
+        with open('data/features/tfidf.csv', 'w', newline='') as csvfile:
+            # Write header row
+            fields = [s + '_tfidf' for s in self.vocabulary]
+            if not features_only: 
+                fields = ['class', 'protein'] + fields
+            header = '\t'.join(map(str,fields))
+            csvfile.write(header)
+            
+            # Write protein features
+            for ix, record in df.iterrows():     
+                csvfile.write("\n")
+                features = self.encode_sequence(record.protein)
+                if not features_only: 
+                    features = [record['class'], record.protein] + features
+                row = '\t'.join(map(str, features))
+                csvfile.write(row)
+
