@@ -12,19 +12,20 @@ from proteins_dataset import ProteinsDataset
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true', help='Run with smaller dataset for debugging')
-    parser.add_argument('-g', '--gpus', default=None, type=int, nargs='+', help='GPU device to use')
+    parser.add_argument('-g', '--gpu', default=None, type=int, help='GPU device to use')
 
     args = parser.parse_args()
 
     dataset = ProteinsDataset(debug=args.debug)
     n_splits = 2 if args.debug else 5
+    max_epochs = 1 if args.debug else 20
     skf = StratifiedKFold(n_splits=n_splits)
     y_true = []
     y_pred = []
 
     for train_indices, test_indices in skf.split(dataset.x, dataset.y):
         model = CharacterBiLSTM(dataset, train_indices, test_indices)
-        trainer = Trainer(max_nb_epochs=1, gpus=args.gpus, distributed_backend='ddp')
+        trainer = Trainer(max_nb_epochs=max_epochs, gpus=[args.gpu])
         trainer.fit(model)
 
         for i in test_indices:
