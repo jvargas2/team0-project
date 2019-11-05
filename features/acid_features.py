@@ -35,26 +35,31 @@ def main():
     input_file = sys.argv[1]
     with open(input_file, "r") as input_csv:
         csv_reader = csv.reader(input_csv)
-        drna_polarities = []
-        drna_h = []
-        non_drna_polarities = []
-        non_drna_h = []
+
+        polarities = {}
+        hydros = {}
+
         for line in csv_reader:
             polarity = get_overall_polarity(line[0])
             hydrophobicity = get_overall_hydrophobicity(line[0])
-            if line[1] == "1":
-                drna_polarities.append(polarity)
-                drna_h.append(hydrophobicity)
+            protein_class = line[1]
+            if protein_class in polarities.keys():
+                polarities[protein_class].append(polarity)
+                hydros[protein_class].append(hydrophobicity)
             else:
-                non_drna_polarities.append(polarity)
-                non_drna_h.append(hydrophobicity)
+                polarities[protein_class] = [polarity]
+                hydros[protein_class] = [hydrophobicity]
+
         with open(sys.argv[2], "w") as output_csv:
             csv_writer = csv.writer(output_csv)
             csv_writer.writerow(["Hydrophobicity", "Polarity", "Class"])
-            for i in range(len(drna_polarities)):
-                csv_writer.writerow([drna_h[i], drna_polarities[i], 1])
-            for i in range(len(non_drna_polarities)):
-                csv_writer.writerow([non_drna_h[i], non_drna_polarities[i], 0])
+
+            for key in polarities.keys():
+                polarities_by_class = polarities[key]
+                hydros_by_class = hydros[key]
+                for i in range(len(polarities[key])):
+                    csv_writer.writerow(
+                        [hydros_by_class[i], polarities_by_class[i], key])
 
 
 if __name__ == "__main__":
