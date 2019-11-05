@@ -62,12 +62,14 @@ class CharacterBiLSTM(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
+        batch_size = 20 if self.on_gpu else 5
         sampler = SubsetRandomSampler(self.train_indices)
-        dataloader = DataLoader(self.dataset, batch_size=5, sampler=sampler)
+        dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
         return dataloader
 
     @pl.data_loader
     def val_dataloader(self):
+        batch_size = 20 if self.on_gpu else 5
         sampler = SubsetRandomSampler(self.train_indices)
-        dataloader = DataLoader(self.dataset, batch_size=5, sampler=sampler)
+        dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
         return dataloader
