@@ -11,6 +11,7 @@ class Protvec(object):
         from protvec import Protvec
         pv = Protvec()
         pv.encode_sequence('CADZSDFDFGSDFGADFGSADFASDGF')
+        pv.write_to_csv(df)
     """
 
     def __init__(self):
@@ -48,3 +49,22 @@ class Protvec(object):
                 kmer_embeddings.append(self.embeddings_index[kmer])
 
         return np.mean(np.array(kmer_embeddings), axis=0)
+
+    def write_to_csv(self, df, features_only = True):
+        """Write ProtVec features to CSV"""
+        with open('data/features/protvec.csv', 'w', newline='') as csvfile:
+            # Write header row
+            fields = [str(s) + 'd_protvec' for s in range(0,100)]
+            if not features_only: 
+                fields = ['class', 'protein'] + fields
+            header = '\t'.join(map(str,fields))
+            csvfile.write(header)
+
+            # Write protein features
+            for ix, record in df.iterrows():     
+                csvfile.write("\n")
+                features = self.encode_sequence(record.protein)
+                if not features_only: 
+                    features = [record['class'], record.protein] + features
+                row = '\t'.join(map(str, features))
+                csvfile.write(row)
