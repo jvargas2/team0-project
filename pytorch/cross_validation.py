@@ -19,18 +19,23 @@ def main():
     dataset = ProteinsDataset(debug=args.debug)
     n_splits = 2 if args.debug else 5
     max_epochs = 1 if args.debug else 20
+    gpus = None if args.gpu is None else [args.gpu]
+
     skf = StratifiedKFold(n_splits=n_splits)
     y_true = []
     y_pred = []
 
     for train_indices, test_indices in skf.split(dataset.x, dataset.y):
         model = CharacterBiLSTM(dataset, train_indices, test_indices)
-        trainer = Trainer(max_nb_epochs=max_epochs, gpus=[args.gpu])
+        trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus)
         trainer.fit(model)
 
         for i in test_indices:
             protein, label = dataset[i]
-            output = model(protein.unsqueeze(0))
+            protein = protein.unsqueeze(0)
+            if args.gpu is not None:
+                protein = protein.cuda(device='cuda:%d' % args.gpu)
+            output = model(protein)
             prediction = torch.max(output, 1)[1].item()
             y_true.append(label)
             y_pred.append(prediction)
