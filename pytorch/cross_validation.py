@@ -29,6 +29,8 @@ def main():
     if args.features == 'acid':
         num_features = 2
         model_class = FeatureLinear
+    elif args.features == 'character':
+        model_class = CharacterBiLSTM
 
     early_stop_callback = EarlyStopping(
         monitor='val_loss',

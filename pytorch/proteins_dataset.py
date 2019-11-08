@@ -4,11 +4,11 @@ import torch
 from torch.utils.data import Dataset
 
 class ProteinsDataset(Dataset):
-    def __init__(self, debug=False, features='character-embedding'):
+    def __init__(self, debug=False, features='character'):
         self.features = features
         self.debug = debug
         
-        if features == 'character-embedding':
+        if features == 'character':
             self.create_character_indices()
         elif features == 'protovec':
             self.create_protovec_features()
@@ -64,7 +64,7 @@ class ProteinsDataset(Dataset):
         return len(self.y)
 
     def __getitem__(self, idx):
-        if self.features == 'character-embedding':
+        if self.features == 'character':
             max_length = 7176
             protein = self.x[idx]
             padding_length = 7176 - len(protein)
