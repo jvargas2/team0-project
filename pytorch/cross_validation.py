@@ -31,20 +31,24 @@ def main():
         model_class = FeatureLinear
     elif args.features == 'character':
         model_class = CharacterBiLSTM
-
-    early_stop_callback = EarlyStopping(
-        monitor='val_loss',
-        min_delta=0.01,
-        patience=2,
-        verbose=True,
-        mode='min'
-    )
+    elif args.features == 'protvec':
+        num_features = 100
+        model_class = FeatureLinear
+    else:
+        raise ValueError('Invalid features')
 
     skf = StratifiedKFold(n_splits=n_splits)
     y_true = []
     y_pred = []
 
     for train_indices, test_indices in skf.split(dataset.x, dataset.y):
+        early_stop_callback = EarlyStopping(
+            monitor='val_loss',
+            min_delta=0.01,
+            patience=2,
+            verbose=True,
+            mode='min'
+        )
         model = model_class(dataset, train_indices, test_indices, num_features)
         trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus, early_stop_callback=early_stop_callback)
         trainer.fit(model)

@@ -10,15 +10,17 @@ class ProteinsDataset(Dataset):
         
         if features == 'character':
             self.create_character_indices()
-        elif features == 'protovec':
+        elif features == 'protvec':
             self.create_protovec_features()
         elif features == 'acid':
             self.create_acid_features()
+        else:
+            raise ValueError('Invalid features')
 
-    def read_csv(self, file_path):
+    def read_csv(self, file_path, sep=','):
         cwd = path.dirname(path.abspath(__file__))
         data_path = cwd + '/' + file_path
-        df = pd.read_csv(data_path)
+        df = pd.read_csv(data_path, sep=sep)
         if self.debug:
             df = df.sample(10)
         return df
@@ -51,7 +53,10 @@ class ProteinsDataset(Dataset):
             self.x.append(indices)
 
     def create_protovec_features(self):
-        pass
+        training_df = self.read_csv('../data/training.csv')
+        self.create_labels(training_df)
+        protvec_df = self.read_csv('../data/features/protvec.csv', sep='\t')
+        self.x = protvec_df.values.tolist()
 
     def create_acid_features(self):
         df = self.read_csv('../data/acid_features.csv')
@@ -71,5 +76,5 @@ class ProteinsDataset(Dataset):
             padding = [0] * padding_length
             protein.extend(padding)
             return torch.tensor(protein), self.y[idx]
-        elif self.features == 'acid':
+        else:
             return torch.tensor(self.x[idx], dtype=torch.float), self.y[idx]
