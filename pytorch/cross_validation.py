@@ -8,6 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import multilabel_confusion_matrix
 
 from character_bilstm import CharacterBiLSTM
+from onehot_bilstm import OnehotBiLSTM
 from feature_linear import FeatureLinear
 from proteins_dataset import ProteinsDataset
 
@@ -21,7 +22,7 @@ def main():
 
     dataset = ProteinsDataset(debug=args.debug, features=args.features)
     n_splits = 2 if args.debug else 5
-    max_epochs = 1 if args.debug else 30
+    max_epochs = 1 if args.debug else 100
     gpus = None if args.gpu is None else [args.gpu]
     num_features = None
     model_class = CharacterBiLSTM
@@ -34,6 +35,11 @@ def main():
     elif args.features == 'protvec':
         num_features = 100
         model_class = FeatureLinear
+    elif args.features == 'count':
+        num_features = 23
+        model_class = FeatureLinear
+    elif args.features == 'onehot':
+        model_class = OnehotBiLSTM
     else:
         raise ValueError('Invalid features')
 
@@ -44,8 +50,8 @@ def main():
     for train_indices, test_indices in skf.split(dataset.x, dataset.y):
         early_stop_callback = EarlyStopping(
             monitor='val_loss',
-            min_delta=0.01,
-            patience=2,
+            # min_delta=0.001,
+            patience=3,
             verbose=True,
             mode='min'
         )

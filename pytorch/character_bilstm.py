@@ -15,8 +15,9 @@ class CharacterBiLSTM(pl.LightningModule):
         self.hidden_size = 100
 
         self.character_embedding = nn.Embedding(
-            num_embeddings=23,
-            embedding_dim=100
+            num_embeddings=24,
+            embedding_dim=100,
+            padding_idx=23
         )
 
         self.lstm = nn.LSTM(
@@ -58,14 +59,14 @@ class CharacterBiLSTM(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
-        batch_size = 20 if self.on_gpu else 5
+        batch_size = 30 if self.on_gpu else 5
         sampler = SubsetRandomSampler(self.train_indices)
         dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
         return dataloader
 
     @pl.data_loader
     def val_dataloader(self):
-        batch_size = 20 if self.on_gpu else 5
+        batch_size = 30 if self.on_gpu else 5
         sampler = SubsetRandomSampler(self.train_indices)
         dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
         return dataloader
