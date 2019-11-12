@@ -5,23 +5,22 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, SubsetRandomSampler
 import pytorch_lightning as pl
 
-class CharacterBiLSTM(pl.LightningModule):
+class OnehotBiLSTM(pl.LightningModule):
     def __init__(self, dataset, train_indices, test_indices, num_features=None):
-        super(CharacterBiLSTM, self).__init__()
+        super(OnehotBiLSTM, self).__init__()
         self.dataset = dataset
         self.train_indices = train_indices
         self.test_indices = test_indices
 
         self.hidden_size = 100
 
-        self.character_embedding = nn.Embedding(
-            num_embeddings=24,
-            embedding_dim=100,
-            padding_idx=23
-        )
+        # self.character_embedding = nn.Embedding(
+        #     num_embeddings=23,
+        #     embedding_dim=100
+        # )
 
         self.lstm = nn.LSTM(
-            input_size=100,
+            input_size=23,
             hidden_size=self.hidden_size,
             batch_first=True,
             bidirectional=True
@@ -30,8 +29,8 @@ class CharacterBiLSTM(pl.LightningModule):
         self.linear = nn.Linear(200, 4)
 
     def forward(self, x):
-        character_embeddings = self.character_embedding(x)
-        _, (hidden_output, _) = self.lstm(character_embeddings)
+        # character_embeddings = self.character_embedding(x)
+        _, (hidden_output, _) = self.lstm(x)
         features = hidden_output.transpose(0, 1)
         features = features.contiguous().view(-1, self.hidden_size * 2)
         tag_probabilities = self.linear(features)
