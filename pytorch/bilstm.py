@@ -5,12 +5,13 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, SubsetRandomSampler
 import pytorch_lightning as pl
 
-class OnehotBiLSTM(pl.LightningModule):
-    def __init__(self, dataset, train_indices, test_indices, num_features=None):
-        super(OnehotBiLSTM, self).__init__()
+class BiLSTM(pl.LightningModule):
+    def __init__(self, dataset, train_indices, test_indices, num_features=None, batch_size=1):
+        super(BiLSTM, self).__init__()
         self.dataset = dataset
         self.train_indices = train_indices
         self.test_indices = test_indices
+        self.batch_size = batch_size
 
         self.hidden_size = 100
 
@@ -20,7 +21,7 @@ class OnehotBiLSTM(pl.LightningModule):
         # )
 
         self.lstm = nn.LSTM(
-            input_size=23,
+            input_size=num_features,
             hidden_size=self.hidden_size,
             batch_first=True,
             bidirectional=True
@@ -58,14 +59,12 @@ class OnehotBiLSTM(pl.LightningModule):
 
     @pl.data_loader
     def train_dataloader(self):
-        batch_size = 30 if self.on_gpu else 5
         sampler = SubsetRandomSampler(self.train_indices)
-        dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
+        dataloader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=sampler)
         return dataloader
 
     @pl.data_loader
     def val_dataloader(self):
-        batch_size = 30 if self.on_gpu else 5
         sampler = SubsetRandomSampler(self.train_indices)
-        dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
+        dataloader = DataLoader(self.dataset, batch_size=self.batch_size, sampler=sampler)
         return dataloader

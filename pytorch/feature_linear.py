@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, SubsetRandomSampler
 import pytorch_lightning as pl
 
 class FeatureLinear(pl.LightningModule):
-    def __init__(self, dataset, train_indices, test_indices, num_features):
+    def __init__(self, dataset, train_indices, test_indices, num_features, batch_size=None):
         super(FeatureLinear, self).__init__()
         self.dataset = dataset
         self.train_indices = train_indices

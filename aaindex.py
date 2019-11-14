@@ -74,6 +74,7 @@ def write_to_file(df, alphabet, features):
     """   
     # Create tensors
     tensor_list = []
+    feature_cnt = len(features['A'])
     for seq in df.protein:
         x = [torch.tensor(features[aa]) if aa in alphabet else torch.zeros(feature_cnt) for aa in seq]
         protein_tensor = torch.stack(x, dim=0)

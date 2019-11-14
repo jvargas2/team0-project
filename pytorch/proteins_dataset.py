@@ -20,6 +20,10 @@ class ProteinsDataset(Dataset):
             self.create_acid_features()
         elif features == 'count':
             self.create_count_features()
+        elif features == 'aaindex':
+            self.create_aaindex_features()
+        elif features == 'aaindex2d':
+            self.create_aaindex2d_features()
         else:
             raise ValueError('Invalid features')
 
@@ -73,6 +77,70 @@ class ProteinsDataset(Dataset):
         df = df.get(self.characters)
         self.x = df.values.tolist()
 
+    def create_aaindex_features(self):
+        training_df = self.read_csv('../data/training.csv')
+        self.create_labels(training_df)
+        aaindex_df = self.read_csv('../data/features/aaindex.csv', sep='\t')
+        self.x = aaindex_df.values.tolist()
+    
+    def create_aaindex2d_features(self):
+        training_df = self.read_csv('../data/training.csv')
+        self.create_labels(training_df)
+        self.x = training_df['protein'].values.tolist()
+
+        self.alphabet = ['A', 'L', 'R', 'K', 'N', 'M', 'D', 'F', 'C', 'P', 'Q', 'S', 'E', 'T', 'G', 'W', 'H', 'Y', 'I', 'V']
+        features = {}
+        header = []
+
+        for aa in self.alphabet:
+            features[aa] = []
+
+        i = 2
+        aaindex = open("data/aaindex1", "r")
+        for line in aaindex:            
+            if line[0] == 'H':
+                accession_num = line.split()[1]
+                header.append(accession_num)
+            elif line[0] == 'I':
+                i = 0
+                continue
+            
+            if i == 0:
+                values = line.split()
+                features['A'].append(float(values[0]))
+                features['R'].append(float(values[1]))
+                features['N'].append(float(values[2]))
+                features['D'].append(float(values[3]))
+                features['C'].append(float(values[4]))
+                features['Q'].append(float(values[5]))
+                features['E'].append(float(values[6]))
+                features['G'].append(float(values[7]))
+                features['H'].append(float(values[8]))
+                features['I'].append(float(values[9]))
+                i = 1
+            elif i == 1:
+                values = line.split()
+                features['L'].append(float(values[0]))
+                features['K'].append(float(values[1]))
+                features['M'].append(float(values[2]))
+                features['F'].append(float(values[3]))
+                features['P'].append(float(values[4]))
+                features['S'].append(float(values[5]))
+                features['T'].append(float(values[6]))
+                features['W'].append(float(values[7]))
+                features['Y'].append(float(values[8]))
+                features['V'].append(float(values[9]))
+                i = 2
+        
+        self.aaindex_features = features
+        self.header = header
+
+    def get_aaindex2d(self, protein):
+        feature_cnt = len(self.aaindex_features['A'])
+        x = [torch.tensor(self.aaindex_features[aa]) if aa in self.alphabet else torch.zeros(feature_cnt) for aa in protein]
+        protein_tensor = torch.stack(x, dim=0)
+        return protein_tensor
+
     def __len__(self):
         return len(self.y)
 
@@ -99,5 +167,8 @@ class ProteinsDataset(Dataset):
                 acid_onehots.append(onehot)
 
             return torch.tensor(acid_onehots, dtype=torch.float), self.y[idx]
+        elif self.features == 'aaindex2d':
+            protein_tensor = self.get_aaindex2d(self.x[idx])
+            return protein_tensor, self.y[idx]
         else:
             return torch.tensor(self.x[idx], dtype=torch.float), self.y[idx]
