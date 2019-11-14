@@ -1,5 +1,6 @@
 import torch
 import preprocessing
+from torch.nn.utils.rnn import pad_sequence
 
 def initialize(alphabet):
     """Initialize the amino acid feature dictionary"""
@@ -64,36 +65,31 @@ def write_to_csv(df, alphabet, header, features):
             row = '\t'.join(map(str, row))
             csvfile.write(row)   
 
-def write_to_file(df, alphabet):
+def write_to_file(df, alphabet, features):
     """Write AAIndex features to a file. 
     All sequences are zero padded at the end to make them identical lengths.
 
     aaindex_MAXL_553.pt - contains a 2D tensor for all sequences of shape [N, max(L), 553]
     where L is the length of each protein, and 553 is the # of AAIndex features
     """   
-    # Pad sequences
-    feature_cnt = len(header)
-    max_seq_len = len(max(df.protein, key=len))
-    seqs = [protein + '0'*(max_seq_len-len(protein)) for protein in df.protein]
-
     # Create tensors
     tensor_list = []
-    for seq in seqs:
+    for seq in df.protein:
         x = [torch.tensor(features[aa]) if aa in alphabet else torch.zeros(feature_cnt) for aa in seq]
         protein_tensor = torch.stack(x, dim=0)
         tensor_list.append(protein_tensor)
 
     # Save a tensor of shape [N, max(L), 553].
     # Where N is the # of proteins, L is the length of each protein, and 553 is the # of AAIndex features
-    stacked_tensor = torch.stack(tensor_list)
-    torch.save(stacked_tensor, 'data/features/aaindex_MAXL_553.pt')
-    print(stacked_tensor.shape)
+    stacked_tensor = pad_sequence(tensor_list)
+    torch.save(stacked_tensor, 'data/features/aaindex_MAXL_N_553.pt')
+    print('SHAPE', stacked_tensor.shape)
 
 def main():
     """Class for encoding biophysical features for amino acids from the AAIndex
         Writes two files to disk:
         1) aaindex.csv - CSV file with 553 feature columns
-        2) aaindex_MAXL_553.pt - contains a 2D tensor for all sequences of shape [N, max(L), 553]
+        2) aaindex_MAXL_N_553.pt - contains a 2D tensor for all sequences of shape [max(L), N, 553]
             where L is the length of each protein, and 553 is the # of AAIndex features
     """
     print("Running aaindex.py")
@@ -105,7 +101,7 @@ def main():
     write_to_csv(df, alphabet, header, features)
 
     print("Write 2D tensor to file")
-    write_to_file(df, alphabet)
+    write_to_file(df, alphabet, features)
 
 if __name__ == "__main__":
     main()
