@@ -64,10 +64,24 @@ def main():
     y_pred = []
 
     for train_indices, test_indices in skf.split(dna_dataset.x, dna_dataset.y):
+        dna_early_stop_callback = EarlyStopping(
+            monitor='val_loss',
+            min_delta=0.0001,
+            patience=3,
+            verbose=True,
+            mode='min'
+        )
+        rna_early_stop_callback = EarlyStopping(
+            monitor='val_loss',
+            min_delta=0.0001,
+            patience=3,
+            verbose=True,
+            mode='min'
+        )
         dna_model = model_class(dna_dataset, train_indices, test_indices, num_features, batch_size)
         rna_model = model_class(rna_dataset, train_indices, test_indices, num_features, batch_size)
-        dna_trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus)
-        rna_trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus)
+        dna_trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus, early_stop_callback=dna_early_stop_callback)
+        rna_trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus, early_stop_callback=rna_early_stop_callback)
         dna_trainer.fit(dna_model)
         rna_trainer.fit(rna_model)
 
