@@ -4,9 +4,10 @@ import torch
 from torch.utils.data import Dataset
 
 class ProteinsDataset(Dataset):
-    def __init__(self, debug=False, features='character'):
+    def __init__(self, debug=False, features='character', labels={'DNA': 0, 'RNA': 1, 'DRNA': 2, 'nonDRNA': 3}):
         self.features = features
         self.debug = debug
+        self.label_to_index = labels
 
         self.characters = [
             'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
@@ -38,9 +39,7 @@ class ProteinsDataset(Dataset):
         return df
 
     def create_labels(self, df):
-        label_to_index = {'DNA': 0, 'RNA': 1, 'DRNA': 2, 'nonDRNA': 3}
-
-        df['label'] = df.apply(lambda row: label_to_index[row['class']], axis=1)
+        df['label'] = df.apply(lambda row: self.label_to_index[row['class']], axis=1)
         self.y = list(df['label'])
 
     def create_character_indices(self):

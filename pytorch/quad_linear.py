@@ -5,9 +5,9 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, SubsetRandomSampler
 import pytorch_lightning as pl
 
-class FeatureLinear(pl.LightningModule):
+class QuadLinear(pl.LightningModule):
     def __init__(self, dataset, train_indices, test_indices, num_features, batch_size=None):
-        super(FeatureLinear, self).__init__()
+        super(QuadLinear, self).__init__()
         self.dataset = dataset
         self.train_indices = train_indices
         self.test_indices = test_indices
@@ -15,16 +15,44 @@ class FeatureLinear(pl.LightningModule):
         self.hidden_size = 512
         self.learning_rate = .0001
 
-        self.layers = nn.Sequential(
+        self.layers_dna = nn.Sequential(
             nn.Linear(num_features, self.hidden_size),
             nn.ReLU(),
             nn.Linear(self.hidden_size, self.hidden_size),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, 4)
+            nn.Linear(self.hidden_size, 2)
+        )
+
+        self.layers_rna = nn.Sequential(
+            nn.Linear(num_features, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, 2)
+        )
+
+        self.layers_drna = nn.Sequential(
+            nn.Linear(num_features, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, 2)
+        )
+
+        self.layers_nondrna = nn.Sequential(
+            nn.Linear(num_features, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, 2)
         )
 
     def forward(self, x):
-        tag_probabilities = self.layers(x)
+        dna = self.layers_dna(x).index_select(1, torch.tensor(0))
+        rna = self.layers_rna(x).index_select(1, torch.tensor(0))
+        drna = self.layers_drna(x).index_select(1, torch.tensor(0))
+        nondrna = self.layers_nondrna(x).index_select(1, torch.tensor(0))
+        tag_probabilities = torch.cat((dna, rna, drna, nondrna), 1)
         return tag_probabilities
 
     def training_step(self, batch, batch_nb):

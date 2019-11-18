@@ -22,7 +22,8 @@ def main():
     args = parser.parse_args()
 
     torch.manual_seed(0)
-    dataset = ProteinsDataset(debug=args.debug, features=args.features)
+    dna_dataset = ProteinsDataset(debug=args.debug, features=args.features, labels={'DNA': 1, 'RNA': 0, 'DRNA': 1, 'nonDRNA': 0})
+    rna_dataset = ProteinsDataset(debug=args.debug, features=args.features, labels={'DNA': 0, 'RNA': 1, 'DRNA': 1, 'nonDRNA': 0})
     n_splits = 2 if args.debug else 5
     max_epochs = 1 if args.debug else 1000
     gpus = None if args.gpu is None else [args.gpu]
@@ -54,7 +55,7 @@ def main():
         model_class = BiLSTM
     elif args.features == 'aaindex-seqvec':
         num_features = 1577
-        model_class = QuadLinear
+        model_class = FeatureLinear
     else:
         raise ValueError('Invalid features')
 
@@ -62,25 +63,37 @@ def main():
     y_true = []
     y_pred = []
 
-    for train_indices, test_indices in skf.split(dataset.x, dataset.y):
-        early_stop_callback = EarlyStopping(
-            monitor='val_loss',
-            # min_delta=0.001,
-            patience=3,
-            verbose=True,
-            mode='min'
-        )
-        model = model_class(dataset, train_indices, test_indices, num_features, batch_size)
-        trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus, early_stop_callback=early_stop_callback)
-        trainer.fit(model)
+    for train_indices, test_indices in skf.split(dna_dataset.x, dna_dataset.y):
+        dna_model = model_class(dna_dataset, train_indices, test_indices, num_features, batch_size)
+        rna_model = model_class(rna_dataset, train_indices, test_indices, num_features, batch_size)
+        dna_trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus)
+        rna_trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus)
+        dna_trainer.fit(dna_model)
+        rna_trainer.fit(rna_model)
 
         for i in test_indices:
             protein, label = dataset[i]
             protein = protein.unsqueeze(0)
             if args.gpu is not None:
                 protein = protein.cuda(device='cuda:%d' % args.gpu)
-            output = model(protein)
-            prediction = torch.max(output, 1)[1].item()
+            dna_output = dna_model(protein)
+            rna_output = rna_model(protein)
+            dna_prediction = torch.max(dna_output, 1)[1].item()
+            rna_prediction = torch.max(rna_output, 1)[1].item()
+
+            prediction = None
+
+            if dna_prediction == 1 and rna_prediction == 1:
+                prediction = 2
+            elif dna_prediction == 1:
+                prediction = 0
+            elif rna_prediction == 1:
+                prediction = 1
+            elif dna_prediction == 0 and rna_prediction == 0:
+                prediction = 3
+            else:
+                raise ValueError('Something went wrong.')
+
             y_true.append(label)
             y_pred.append(prediction)
 
