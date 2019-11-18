@@ -15,6 +15,8 @@ class FeatureLinear(pl.LightningModule):
         self.layers = nn.Sequential(
             nn.Linear(num_features, 512),
             nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
             nn.Linear(512, 4)
         )
 

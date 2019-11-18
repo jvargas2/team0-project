@@ -24,6 +24,8 @@ class ProteinsDataset(Dataset):
             self.create_aaindex_features()
         elif features == 'aaindex2d':
             self.create_aaindex2d_features()
+        elif features == 'aaindex-seqvec':
+            self.create_aaindex_seqvec_features()
         else:
             raise ValueError('Invalid features')
 
@@ -140,6 +142,12 @@ class ProteinsDataset(Dataset):
         x = [torch.tensor(self.aaindex_features[aa]) if aa in self.alphabet else torch.zeros(feature_cnt) for aa in protein]
         protein_tensor = torch.stack(x, dim=0)
         return protein_tensor
+
+    def create_aaindex_seqvec_features(self):
+        df = self.read_csv('../data/features/aaindex_seqvec.csv', sep='\t')
+        self.create_labels(df)
+        df = df.drop(['Unnamed: 0','label', 'class'], axis=1)
+        self.x = df.values.tolist()
 
     def __len__(self):
         return len(self.y)

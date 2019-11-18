@@ -20,6 +20,7 @@ def main():
 
     args = parser.parse_args()
 
+    torch.manual_seed(0)
     dataset = ProteinsDataset(debug=args.debug, features=args.features)
     n_splits = 2 if args.debug else 5
     max_epochs = 1 if args.debug else 100
@@ -50,6 +51,9 @@ def main():
         num_features = 553
         batch_size = 1
         model_class = BiLSTM
+    elif args.features == 'aaindex-seqvec':
+        num_features = 1577
+        model_class = FeatureLinear
     else:
         raise ValueError('Invalid features')
 
@@ -106,9 +110,9 @@ def main():
             'tn': tn,
             'fp': fp,
             'fn': fn,
-            'accuracy': accuracy,
             'sensitivity': sensitivity,
             'specificity': specificity,
+            'accuracy': accuracy,
             'mcc': mcc
         }
 

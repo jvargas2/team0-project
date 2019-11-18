@@ -15,11 +15,6 @@ class BiLSTM(pl.LightningModule):
 
         self.hidden_size = 100
 
-        # self.character_embedding = nn.Embedding(
-        #     num_embeddings=23,
-        #     embedding_dim=100
-        # )
-
         self.lstm = nn.LSTM(
             input_size=num_features,
             hidden_size=self.hidden_size,
