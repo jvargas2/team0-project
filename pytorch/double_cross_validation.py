@@ -22,6 +22,7 @@ def main():
     args = parser.parse_args()
 
     torch.manual_seed(0)
+    dataset = ProteinsDataset(debug=args.debug, features=args.features)
     dna_dataset = ProteinsDataset(debug=args.debug, features=args.features, labels={'DNA': 1, 'RNA': 0, 'DRNA': 1, 'nonDRNA': 0})
     rna_dataset = ProteinsDataset(debug=args.debug, features=args.features, labels={'DNA': 0, 'RNA': 1, 'DRNA': 1, 'nonDRNA': 0})
     n_splits = 2 if args.debug else 5
@@ -63,7 +64,7 @@ def main():
     y_true = []
     y_pred = []
 
-    for train_indices, test_indices in skf.split(dna_dataset.x, dna_dataset.y):
+    for train_indices, test_indices in skf.split(dataset.x, dataset.y):
         dna_early_stop_callback = EarlyStopping(
             monitor='val_loss',
             min_delta=0.0001,
