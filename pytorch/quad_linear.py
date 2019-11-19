@@ -48,10 +48,10 @@ class QuadLinear(pl.LightningModule):
         )
 
     def forward(self, x):
-        dna = self.layers_dna(x).index_select(1, torch.tensor(0))
-        rna = self.layers_rna(x).index_select(1, torch.tensor(0))
-        drna = self.layers_drna(x).index_select(1, torch.tensor(0))
-        nondrna = self.layers_nondrna(x).index_select(1, torch.tensor(0))
+        dna = self.layers_dna(x).index_select(1, torch.tensor(0, device=x.device))
+        rna = self.layers_rna(x).index_select(1, torch.tensor(0, device=x.device))
+        drna = self.layers_drna(x).index_select(1, torch.tensor(0, device=x.device))
+        nondrna = self.layers_nondrna(x).index_select(1, torch.tensor(0, device=x.device))
         tag_probabilities = torch.cat((dna, rna, drna, nondrna), 1)
         return tag_probabilities
 
