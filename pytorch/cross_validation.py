@@ -8,9 +8,10 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import multilabel_confusion_matrix
 
 from character_bilstm import CharacterBiLSTM
-from onehot_bilstm import OnehotBiLSTM
+from bilstm import BiLSTM
 from feature_linear import FeatureLinear
 from proteins_dataset import ProteinsDataset
+from quad_linear import QuadLinear
 
 def main():
     parser = argparse.ArgumentParser()
@@ -20,11 +21,13 @@ def main():
 
     args = parser.parse_args()
 
+    torch.manual_seed(0)
     dataset = ProteinsDataset(debug=args.debug, features=args.features)
     n_splits = 2 if args.debug else 5
-    max_epochs = 1 if args.debug else 100
+    max_epochs = 1 if args.debug else 1000
     gpus = None if args.gpu is None else [args.gpu]
     num_features = None
+    batch_size = 1
     model_class = CharacterBiLSTM
 
     if args.features == 'acid':
@@ -39,7 +42,19 @@ def main():
         num_features = 23
         model_class = FeatureLinear
     elif args.features == 'onehot':
-        model_class = OnehotBiLSTM
+        num_features = 23
+        batch_size = 30 if self.on_gpu else 5
+        model_class = BiLSTM
+    elif args.features == 'aaindex':
+        num_features = 553
+        model_class = FeatureLinear
+    elif args.features == 'aaindex2d':
+        num_features = 553
+        batch_size = 1
+        model_class = BiLSTM
+    elif args.features == 'aaindex-seqvec':
+        num_features = 1577
+        model_class = QuadLinear
     else:
         raise ValueError('Invalid features')
 
@@ -55,7 +70,7 @@ def main():
             verbose=True,
             mode='min'
         )
-        model = model_class(dataset, train_indices, test_indices, num_features)
+        model = model_class(dataset, train_indices, test_indices, num_features, batch_size)
         trainer = Trainer(max_nb_epochs=max_epochs, gpus=gpus, early_stop_callback=early_stop_callback)
         trainer.fit(model)
 
@@ -96,9 +111,9 @@ def main():
             'tn': tn,
             'fp': fp,
             'fn': fn,
-            'accuracy': accuracy,
             'sensitivity': sensitivity,
             'specificity': specificity,
+            'accuracy': accuracy,
             'mcc': mcc
         }
 

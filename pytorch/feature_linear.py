@@ -6,16 +6,21 @@ from torch.utils.data import DataLoader, SubsetRandomSampler
 import pytorch_lightning as pl
 
 class FeatureLinear(pl.LightningModule):
-    def __init__(self, dataset, train_indices, test_indices, num_features):
+    def __init__(self, dataset, train_indices, test_indices, num_features, batch_size=None):
         super(FeatureLinear, self).__init__()
         self.dataset = dataset
         self.train_indices = train_indices
         self.test_indices = test_indices
+        self.batch_size = 100
+        self.hidden_size = 512
+        self.learning_rate = .0001
 
         self.layers = nn.Sequential(
-            nn.Linear(num_features, 512),
+            nn.Linear(num_features, self.hidden_size),
             nn.ReLU(),
-            nn.Linear(512, 4)
+            nn.Linear(self.hidden_size, self.hidden_size),
+            nn.ReLU(),
+            nn.Linear(self.hidden_size, 4)
         )
 
     def forward(self, x):
@@ -40,18 +45,18 @@ class FeatureLinear(pl.LightningModule):
         return {'val_loss': avg_loss, 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.0001)
+        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
     @pl.data_loader
     def train_dataloader(self):
-        batch_size = 500 if self.on_gpu else 200
+        batch_size = self.batch_size
         sampler = SubsetRandomSampler(self.train_indices)
         dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
         return dataloader
 
     @pl.data_loader
     def val_dataloader(self):
-        batch_size = 500 if self.on_gpu else 200
+        batch_size = self.batch_size
         sampler = SubsetRandomSampler(self.train_indices)
         dataloader = DataLoader(self.dataset, batch_size=batch_size, sampler=sampler)
         return dataloader
