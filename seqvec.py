@@ -3,8 +3,9 @@ from pathlib import Path
 import torch
 import preprocessing
 from torch.nn.utils.rnn import pad_sequence
+import pandas as pd
 
-def write_to_files(df, seqvec):
+def write_to_files(df, seqvec, output_file):
     """Write SeqVec features to files. Creates two files:
     seqvec_1024.csv - contains 1024 feature values for each unique sequence
     seqvec_L_1024.pt - stacked tensors for all sequences
@@ -24,7 +25,7 @@ def write_to_files(df, seqvec):
     df = sorted_df.copy()
 
     # Write seqvec_1024.csv feature vector
-    with open('data/features/seqvec_1024.csv', 'w', newline='') as csvfile:
+    with open(output_file, 'w', newline='') as csvfile:
         # Write header row
         fields = [str(s) + 'd_seqvec' for s in range(0, 1024)]
         fields = ['protein'] + fields
@@ -39,10 +40,10 @@ def write_to_files(df, seqvec):
             csvfile.write(record.protein + '\t')
             csvfile.write(row)
 
-    # Write [max(L), N, 1024] tensor
-    tensor_list = [torch.tensor(record.embedding).sum(dim=0) for ix, record in df.iterrows()]
-    stacked_tensor = pad_sequence(tensor_list)
-    torch.save(stacked_tensor, 'data/features/seqvec_L_1024.pt')
+    # # Write [max(L), N, 1024] tensor
+    # tensor_list = [torch.tensor(record.embedding).sum(dim=0) for ix, record in df.iterrows()]
+    # stacked_tensor = pad_sequence(tensor_list)
+    # torch.save(stacked_tensor, 'data/features/seqvec_L_1024.pt')
 
 def main():
     """
@@ -66,13 +67,18 @@ def main():
     
     # Write SeqVec features to files
     print("Load dataframe")
-    df = preprocessing.load_df()
-    print("Write features to disk")
-    write_to_files(df, seqvec)
+    dataset = "sequences_test"
+    input_file = "data/%s.csv" % dataset
+    output_file = "data/features/seqvec_%s.csv" % dataset
+    print("Running seqvec.py over %s" % dataset)
+    df = pd.read_csv(input_file)
 
-    # Reload
-    loaded = torch.load('data/features/seqvec_L_1024.pt')
-    print('SHAPE', loaded.shape)
+    print("Write features to disk")
+    write_to_files(df, seqvec, output_file)
+
+    # # Reload
+    # loaded = torch.load('data/features/seqvec_L_1024.pt')
+    # print('SHAPE', loaded.shape)
 
 if __name__ == "__main__":
     main()

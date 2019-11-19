@@ -1,5 +1,5 @@
 import torch
-import preprocessing
+import pandas as pd
 from torch.nn.utils.rnn import pad_sequence
 
 def initialize(alphabet):
@@ -48,11 +48,11 @@ def initialize(alphabet):
             i = 2
     return features, header
 
-def write_to_csv(df, alphabet, header, features):
+def write_to_csv(df, alphabet, header, features, output_file):
     """Write AAIndex features to CSV"""
     feature_cnt = len(header)
 
-    with open('data/features/aaindex.csv', 'w', newline='') as csvfile:
+    with open(output_file, 'w', newline='') as csvfile:
         # Write header row
         fields = '\t'.join(map(str,header))
         csvfile.write(fields)
@@ -93,16 +93,19 @@ def main():
         2) aaindex_MAXL_N_553.pt - contains a 2D tensor for all sequences of shape [max(L), N, 553]
             where L is the length of each protein, and 553 is the # of AAIndex features
     """
-    print("Running aaindex.py")
+    dataset = "sequences_test"
+    input_file = "data/%s.csv" % dataset
+    output_file = "data/features/aaindex_%s.csv" % dataset
+    print("Running aaindex.py over %s" % dataset)
     alphabet = ['A', 'L', 'R', 'K', 'N', 'M', 'D', 'F', 'C', 'P', 'Q', 'S', 'E', 'T', 'G', 'W', 'H', 'Y', 'I', 'V']
     features, header = initialize(alphabet)
-    df = preprocessing.load_df()
+    df = pd.read_csv(input_file)
 
     print("Write features to CSV")
-    write_to_csv(df, alphabet, header, features)
+    write_to_csv(df, alphabet, header, features, output_file)
 
-    print("Write 2D tensor to file")
-    write_to_file(df, alphabet, features)
+    # print("Write 2D tensor to file")
+    # write_to_file(df, alphabet, features)
 
 if __name__ == "__main__":
     main()
